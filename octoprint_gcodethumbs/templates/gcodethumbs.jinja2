@@ -1,0 +1,13 @@
+<div class="modal hide fade" id="thumbnail_viewer">
+	<div class="modal-header">
+		<a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+		<h3 data-bind="text: current_file()"></h3>
+	</div>
+	<div class="modal-body">
+		<div data-bind="visible: downloading">Loading file <span data-bind="text: current_file"></span></div>
+		<canvas id="gcodethumb_preview" width="100%" height="100%"></canvas>
+	</div>
+	<div class="modal-footer">
+		<a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">{{ _('Close') }}</a>
+	</div>
+</div>

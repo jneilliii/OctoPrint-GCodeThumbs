@@ -1,131 +1,168 @@
 $(function() {
   function GCodePreviewViewModel(parameters) {
-    // console.log("initializing GCodePreviewViewModel");
+	// console.log("initializing GCodePreviewViewModel");
 
-    const self = this;
-    let downloading = false;
-    const errors = {};
-    const previews = {}; // maps filenames to GCodePreview instances
-
+/*	 const self = this;
+	let downloading = false;
+	const errors = {};
+	const previews = {}; // maps filenames to GCodePreview instances */
+	var self = this;
     self.filesViewModel = parameters[0];
-    // console.log(self.filesViewModel);
+    self.current_file = ko.observable();
+	self.current_file_url = ko.observable();
+	self.downloading = ko.observable(false);
 
-    /*
-      HACK! unfortunately there seems to be no way to enrich the files section in a clean way
-      (barring completely replacing the whole UI). Please tell me if I'm wrong :-)
-      So we just monitor the dom and patch it whenever we think it is necessary.
-      To keep things in proportion we will cache the dom fragments in memory and we'll
-      limit our updates to the currently visible area in the scrollable list.
-    */
-    const scrollContainer = document.querySelector('.gcode_files .scroll-wrapper');
-    var timer = null;
+	/*
+	  HACK! unfortunately there seems to be no way to enrich the files section in a clean way
+	  (barring completely replacing the whole UI). Please tell me if I'm wrong :-)
+	  So we just monitor the dom and patch it whenever we think it is necessary.
+	  To keep things in proportion we will cache the dom fragments in memory and we'll
+	  limit our updates to the currently visible area in the scrollable list.
+	*/
+/*	 const scrollContainer = document.querySelector('.gcode_files .scroll-wrapper');
+	var timer = null; */
+	
+	self.filesViewModel.load_preview = function(data){
+		console.log(data);
+		self.current_file(data.name);
+		self.current_file_url(data.refs.download);
+		self.downloading(true);
+		$('div#thumbnail_viewer').modal('show');
+	}
 
-    // TODO: reset timer onscroll
-    function monitorDom() {
-      if (downloading) return;
+	$(document).ready(function(){
+		let regex = /<div class="btn-group action-buttons">([\s\S]*)<.div>/mi;
+		let template = '<div class="btn btn-mini" data-bind="click: function() { if ($root.loginState.isUser()) { $root.load_preview($data) } else { return; } }" title="Show Thumbnail"><i class="fa fa-image"></i></div>';
 
-      const elements = getElements()
-        .filter( isVisible )
-        .filter( elementNeedsPreview )
-        .filter( hasNotErrored );
+		$("#files_template_machinecode").text(function () {
+			return $(this).text().replace(regex, '<div class="btn-group action-buttons">$1	' + template + '></div>');
+		});
 
-      // if (elements.length > 0)
-      //   console.log('[GCodePreview] ', elements.length, ' elements queued');
+		$('div#thumbnail_viewer').on('shown.bs.modal', function(){
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: self.current_file_url(),
+				success: function(response){
+						self.downloading(false);
+						const preview = new GCodePreview({canvas: document.getElementById('gcodethumb_preview')});
+						preview.processGCode(response);
+						console.log(response);
+					}
+			});
+		});
+	});
 
-      if (elements.length)
-        enrichWithPreview(elements[0]);
-      else
-        timer = setTimeout(monitorDom, 100);
-    }
+/*	 // TODO: reset timer onscroll
+	function monitorDom() {
+	  if (downloading) return;
 
-    function getElements() {
-      return [].slice.call(document.querySelectorAll('.entry.machinecode'));
-    }
+	  const elements = getElements()
+		.filter( isVisible )
+		.filter( elementNeedsPreview )
+		.filter( hasNotErrored );
 
-    function isVisible(el) {
-      return el.offsetTop + el.offsetHeight > scrollContainer.scrollTop &&
-             el.offsetTop < scrollContainer.scrollTop + scrollContainer.offsetHeight;
-    }
+	  // if (elements.length > 0)
+	  //   console.log('[GCodePreview] ', elements.length, ' elements queued');
 
-    // check if the element has been enriched with a preview already
-    function elementNeedsPreview(element) {
-      return !element.querySelector('canvas');
-    }
+	  if (elements.length)
+		enrichWithPreview(elements[0]);
+	  else
+		timer = setTimeout(monitorDom, 100);
+	}
 
-    function hasNotErrored(element) {
-      const filename = extractKey(element);
-      return !errors[filename];
-    }
+	function getElements() {
+	  return [].slice.call(document.querySelectorAll('.entry.machinecode'));
+	}
 
-    // TODO: include device and parent folder(s) to ensure uniqueness?
-    function extractKey(element) {
-      const internal = element.querySelector('.internal');
-      if (internal)
-        return internal.querySelector('span').innerText;
-      return element.querySelector('.title').innerText;
-    }
+	function isVisible(el) {
+	  return el.offsetTop + el.offsetHeight > scrollContainer.scrollTop &&
+			 el.offsetTop < scrollContainer.scrollTop + scrollContainer.offsetHeight;
+	}
 
-    // renders a preview unattached to the dom
-    // TODO: cache?
-    function renderPreview(element, gcode, filename) {
-        // create canvas
-        const canvas = document.createElement('canvas');
+	// check if the element has been enriched with a preview already
+	function elementNeedsPreview(element) {
+	  return !element.querySelector('canvas');
+	}
 
-        // instantiate preview
-        const preview = new GCodePreview({
-          canvas : canvas,
-        });
+	function hasNotErrored(element) {
+	  const filename = extractKey(element);
+	  return !errors[filename];
+	}
 
-        previews[filename] = preview;
+	// TODO: include device and parent folder(s) to ensure uniqueness?
+	function extractKey(element) {
+	  const internal = element.querySelector('.internal');
+	  if (internal)
+		return internal.querySelector('span').innerText;
+	  return element.querySelector('.title').innerText;
+	}
 
-        // resize to container
-        canvas.width = element.offsetWidth;
+	// renders a preview unattached to the dom
+	// TODO: cache?
+	function renderPreview(element, gcode, filename) {
+		// create canvas
+		// const canvas = document.createElement('canvas');
 
-        // render while still detached from the DOM
-        preview.processGCode(gcode);
-        
-        return canvas;
-    }
+		// instantiate preview
+		const preview = new GCodePreview({
+		  canvas : document.getElementById('gcodethumb_preview'),
+		});
 
-    function enrichWithPreview(element) {
-      const filename = extractKey(element);
-      
-      if (previews[filename]) {
-        insertAfter(previews[filename].canvas, element.querySelector('.title'));
-        timer = setTimeout(monitorDom, 10);
-        return;
-      }
+		previews[filename] = preview;
 
-      downloading = true;
-      console.log('[GCodePreview] downloading ' + filename);
+		// resize to container
+		canvas.width = element.offsetWidth;
 
-      // TODO: show spinner while downloading
-      OctoPrint.files.download("local", filename)
-        .done(function(response, rstatus) {
-          downloading = false;
-          if(rstatus === 'success') {
+		// render while still detached from the DOM
+		preview.processGCode(gcode);
+		
+		return canvas;
+	}
 
-            const canvas = renderPreview(element, response, filename);
+	function enrichWithPreview(element) {
+	  const filename = extractKey(element);
+	  
+	  if (previews[filename]) {
+		insertAfter(previews[filename].canvas, element.querySelector('.title'));
+		timer = setTimeout(monitorDom, 10);
+		return;
+	  }
 
-            // attach to DOM
-            insertAfter(canvas, element.querySelector('.title'));
-          }
-          timer = setTimeout(monitorDom, 1000);
-        })
-        .catch(function(e) {
-          console.warn('error while getting file', e);
-          downloading = false;
-          errors[filename] = e;
-          timer = setTimeout(monitorDom, 1000);
-        });
-    }
+	  downloading = true;
+	  console.log('[GCodePreview] downloading ' + filename);
 
-    function insertAfter(newNode, referenceNode) {
-      referenceNode.parentNode.insertBefore(newNode, referenceNode.nextElementSibling);
-    }
+	  // TODO: show spinner while downloading
+	  OctoPrint.files.download("local", filename)
+		.done(function(response, rstatus) {
+		  downloading = false;
+		  if(rstatus === 'success') {
 
-    setTimeout(monitorDom, 2000);
+			const canvas = renderPreview(element, response, filename);
+
+			// attach to DOM
+			insertAfter(canvas, element.querySelector('.title'));
+		  }
+		  timer = setTimeout(monitorDom, 1000);
+		})
+		.catch(function(e) {
+		  console.warn('error while getting file', e);
+		  downloading = false;
+		  errors[filename] = e;
+		  timer = setTimeout(monitorDom, 1000);
+		});
+	}
+
+	function insertAfter(newNode, referenceNode) {
+	  referenceNode.parentNode.insertBefore(newNode, referenceNode.nextElementSibling);
+	}
+
+	setTimeout(monitorDom, 2000); */
   }
 
-  OCTOPRINT_VIEWMODELS.push([GCodePreviewViewModel, ["filesViewModel"], "#element"]);
+  OCTOPRINT_VIEWMODELS.push({
+	  construct: GCodePreviewViewModel, 
+	  dependencies: ["filesViewModel"], 
+	  elements: ["div#thumbnail_viewer"]
+  });
 });
