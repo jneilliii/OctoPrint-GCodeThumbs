@@ -17,18 +17,10 @@ $(function() {
 		self.renderer.setSize( 600, 600 );
 
 		self.filesViewModel.load_preview = function(data){
+			self.current_file(data.name);
+			self.current_file_url(data.refs.download);
 			self.downloading(true);
 			$('div#thumbnail_viewer').modal('show');
-			self.loader.load( data.refs.download, function ( object ) {
-				object.position.set( - 100, - 20, 100 );
-				self.scene.add( object );
-				self.downloading(false);
-			} );
-
-			self.container.appendChild( self.renderer.domElement );
-			self.controls = new THREE.OrbitControls( self.camera, self.renderer.domElement );
-			//window.addEventListener( 'resize', self.resize, false );
-			self.animate();
 		}
 
 		self.resize = function() {
@@ -48,6 +40,20 @@ $(function() {
 
 			$("#files_template_machinecode").text(function () {
 				return $(this).text().replace(regex, '<div class="btn-group action-buttons">$1	' + template + '></div>');
+			});
+
+			$('div#thumbnail_viewer').on('shown.bs.modal', function(){
+				console.log(self.container);
+				self.loader.load( self.current_file_url(), function ( object ) {
+					object.position.set( - 100, - 20, 100 );
+					self.scene.add( object );
+					self.downloading(false);
+				} );
+
+				self.container.appendChild( self.renderer.domElement );
+				self.controls = new THREE.OrbitControls( self.camera, self.renderer.domElement );
+				//window.addEventListener( 'resize', self.resize, false );
+				self.animate();
 			});
 		});
 	}
