@@ -19,7 +19,6 @@ $(function() {
 		self.filesViewModel.load_preview = function(data){
 			self.downloading(true);
 			$('div#thumbnail_viewer').modal('show');
-			$('#tab_plugin_gcodethumbs_link a').trigger('click');
 			self.loader.load( data.refs.download, function ( object ) {
 				object.position.set( - 100, - 20, 100 );
 				self.scene.add( object );
