@@ -14,6 +14,7 @@ THREE.GCodeLoader = function ( manager ) {
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
 	this.splitLayer = false;
+	this.includeMovement = true;
 
 };
 
@@ -52,7 +53,7 @@ THREE.GCodeLoader.prototype = {
 		var pathMaterial = new THREE.LineBasicMaterial( { color: 0xFF0000 } );
 		pathMaterial.name = 'path';
 
-		var extrudingMaterial = new THREE.LineBasicMaterial( { color: 0x00FF00 } );
+		var extrudingMaterial = new THREE.LineMaterial( { color: 0xFFA500, linewidth: 3 } );
 		extrudingMaterial.name = 'extruded';
 
 		function newLayer( line ) {
@@ -199,7 +200,9 @@ THREE.GCodeLoader.prototype = {
 
 				var layer = layers[ i ];
 				addObject( layer.vertex, true );
-				addObject( layer.pathVertex, false );
+				if ( this.includeMovement ) {
+					addObject( layer.pathVertex, false );
+				}
 
 			}
 
@@ -217,7 +220,9 @@ THREE.GCodeLoader.prototype = {
 			}
 
 			addObject( vertex, true );
-			addObject( pathVertex, false );
+			if ( this.includeMovement ) {
+				addObject( pathVertex, false );
+			}
 
 		}
 
