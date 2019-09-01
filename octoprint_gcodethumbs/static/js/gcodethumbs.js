@@ -11,9 +11,11 @@ $(function() {
 		self.scene = new THREE.Scene(); 
 		self.renderer = new THREE.WebGLRenderer({canvas:self.container, alpha: true});
 		self.loader = new THREE.GCodeLoader();
+		self.loader.splitLayer = true;
+		self.loader.includeMovement = false;
 		self.controls = new THREE.OrbitControls( self.camera, self.container );
 
-		self.camera.position.set( 0, 0, 100 );
+		self.camera.position.set( 0, 0, 70 );
 		self.renderer.setPixelRatio( window.devicePixelRatio );
 		self.renderer.setSize( 600, 600 );
 
@@ -24,11 +26,14 @@ $(function() {
 			self.downloading(true);
 			self.loader.load( data.refs.download, function ( object ) {
 				self.scene.remove.apply(self.scene, self.scene.children);
-				self.bed = new THREE.GridHelper(200, 200);
+				self.bed = new THREE.GridHelper(300, 300); // replace with bed dimensions.
+				self.bed.position.set(150, 150);
 				self.scene.add(self.bed);
 				console.log(object);
-				//object.position.set( - 100, - 20, 100 );
+				//object.position.set( -150, -150, 100 ); // replace with bed dimensions/2
+
 				self.scene.add( object );
+				window.scene = self.scene;
 				self.animate();
 				self.downloading(false);
 			}/* , function( progress ){console.log((progress.loaded/progress.total));} */);

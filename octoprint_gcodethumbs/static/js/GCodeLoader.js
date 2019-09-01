@@ -53,7 +53,7 @@ THREE.GCodeLoader.prototype = {
 		var pathMaterial = new THREE.LineBasicMaterial( { color: 0xFF0000 } );
 		pathMaterial.name = 'path';
 
-		var extrudingMaterial = new THREE.LineMaterial( { color: 0xFFA500, linewidth: 3 } );
+		var extrudingMaterial = new THREE.LineBasicMaterial( { color: 0xFFA500, linewidth: 3 } );
 		extrudingMaterial.name = 'extruded';
 
 		function newLayer( line ) {
@@ -185,7 +185,7 @@ THREE.GCodeLoader.prototype = {
 			var geometry = new THREE.BufferGeometry();
 			geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertex, 3 ) );
 
-			var segments = new THREE.LineSegments( geometry, extruding ? extrudingMaterial : pathMaterial );
+			var segments = new THREE.LineSegments2( geometry, extruding ? extrudingMaterial : pathMaterial );
 			segments.name = 'layer' + i;
 			object.add( segments );
 
