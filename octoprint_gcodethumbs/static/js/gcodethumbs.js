@@ -14,8 +14,6 @@ $(function() {
 		self.loader.splitLayer = true;
 		self.loader.includeMovement = false;
 		self.controls = new THREE.OrbitControls( self.camera, self.container );
-
-		self.camera.position.set( 0, 0, 70 );
 		self.renderer.setPixelRatio( window.devicePixelRatio );
 		self.renderer.setSize( 600, 600 );
 
@@ -26,14 +24,18 @@ $(function() {
 			self.downloading(true);
 			self.loader.load( data.refs.download, function ( object ) {
 				self.scene.remove.apply(self.scene, self.scene.children);
-				self.bed = new THREE.GridHelper(300, 300); // replace with bed dimensions.
-				self.bed.position.set(150, 150);
-				self.scene.add(self.bed);
-				console.log(object);
-				//object.position.set( -150, -150, 100 ); // replace with bed dimensions/2
 
+				self.bed = new THREE.GridHelper(300, 30); // replace with bed dimensions.
+				self.scene.add(self.bed);
+
+				self.camera.position.x = 0;
+				self.camera.position.y = 50;
+				self.camera.position.z = 300;
+				self.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
+
+				object.position.set( - 150, 0, 150 ); // replace with bed dimensions/2
 				self.scene.add( object );
-				window.scene = self.scene;
+
 				self.animate();
 				self.downloading(false);
 			}/* , function( progress ){console.log((progress.loaded/progress.total));} */);

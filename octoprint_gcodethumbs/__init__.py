@@ -12,7 +12,7 @@ class GCodeThumbsPlugin(octoprint.plugin.StartupPlugin,
 
 	def get_assets(self):
 		return dict(
-			js=["js/three.js", "js/OrbitControls.js", "js/LineSegments2.js", "js/Line2.js", "js/LineSegmentsGeometry.js", "js/LineGeometry", "js/LineMaterial.js", "js/GCodeLoader.js", "js/gcodethumbs.js"],
+			js=["js/three.js", "js/OrbitControls.js", "js/LineSegments2.js", "js/Line2.js", "js/LineSegmentsGeometry.js", "js/LineGeometry", "js/LineMaterial.js", "js/THREE.Meshline.js", "js/GCodeLoader.js", "js/gcodethumbs.js"],
 			css=["css/gcodethumbs.css"]
 		)
 

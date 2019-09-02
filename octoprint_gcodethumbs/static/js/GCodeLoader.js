@@ -184,10 +184,21 @@ THREE.GCodeLoader.prototype = {
 
 			var geometry = new THREE.BufferGeometry();
 			geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertex, 3 ) );
+			
+			var mesh_line = new MeshLine();
+			mesh_line.setGeometry(new Float32Array( vertex, 3 ));
 
 			var segments = new THREE.LineSegments2( geometry, extruding ? extrudingMaterial : pathMaterial );
+			var mesh_line_color = extruding ? new THREE.Color( 0xFFA500 ): new THREE.Color( 0xFF0000 );
+			var mesh_line_width = extruding ? .25 : .01;
+			var mesh_line_material = new MeshLineMaterial({color: mesh_line_color, lineWidth: mesh_line_width, side: THREE.DoubleSide});
+			var segments2 = new THREE.Mesh( mesh_line.geometry, mesh_line_material);
+			
 			segments.name = 'layer' + i;
-			object.add( segments );
+			segments2.name = 'layer' + i;
+			
+			//object.add( segments );
+			object.add(segments2);
 
 		}
 
